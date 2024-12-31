@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+<title>CORS</title>
+<link rel="stylesheet" href="../public/styles.css">
+<link rel="stylesheet" href="../public/media-queries.css">
+<link rel="stylesheet" href="../public/prism/prism.css">
+
+<script defer src="../public/prism/prism.js"></script>
+<script defer src="../public/storage.js"></script>
+<script defer src="../public/script.js"></script>
+</head>
+
+<body>
+<main id="main">
+<header>
+<h1>CORS</h1>
+<h3>(set subtitle in 99-Intro.md, if required)</h3>
+<h4>December 2024</h4>
+</header>
+
+<section id="intro" aria-labelledby="intro" data-item="Introduction">
+<h2>
+<a href="#intro">Introduction</a>
+</h2>
+<p>To create your own content, edit the file at
+<code>docs/md/99-Intro.md</code> and add more <code>.md</code> files in
+the <code>docs/md/</code> folder.</p>
+<p>See <a
+href="https://htm-elves.github.io/Writing-Your-Own-Tutorials/">Writing
+Your Own Tutorials</a> for tips and shortcuts.</p>
+</section>
+
+<div class="spacer"></div>
+<footer id="footer">
+<button type="button" id="previous" disabled>&lt;</button>
+<span id="previous-name"></span>
+<span class="spacer"></span>
+<button type="button" id="next">&gt;</button>
+<span id="next-name"></span>
+</footer>
+</main>
+
+<nav
+id="menu"
+class="open"
+>
+<div class="paging">
+<label
+title="Split into sections"
+>
+<img src="../public/svg/pages.svg" alt="pages">
+<input
+type="radio"
+name="paging"
+id="pages"
+checked
+>
+</label>
+<label
+title="Show as a single page"
+>
+<img src="../public/svg/scroll.svg" alt="scroll">
+<input
+type="radio"
+name="paging"
+id="scroll"
+>
+</label>
+</div>
+<svg
+id="menu-icon"
+viewBox="0 0 100 100"
+preserveAspectRatio="xMidYMid meet"
+>
+<g
+class="menu"
+stroke-width="20"
+stroke-linecap="round"
+>
+<path
+d="M5,20 L5,80 H95 L95,20 z"
+fill="#0000"
+stroke="none"
+/>
+<line
+x1="15"
+y1="20"
+x2="85"
+y2="20"
+/>
+<line
+x1="15"
+y1="50"
+x2="85"
+y2="50"
+/>
+<line
+x1="15"
+y1="80"
+x2="85"
+y2="80"
+/>
+</g>
+</svg>
+
+<ul id="menu-items">
+</ul>
+
+<div id="repo">
+<a
+href="https://github.com/MERNCraft/CORS/issues/new"
+>
+Feedback
+</a>
+
+<a
+class="repo"
+href="https://github.com/MERNCraft/CORS"
+>
+<img src="../public/svg/github.svg" alt="github logo">
+<span>GitHub repository</span>
+</a>
+</div>
+</nav>
+</body>
+</html>

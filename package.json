@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "pandoc": "pandoc -o docs/index.html --filter public/filter.js --template=public/template.html docs/md/*.md",
+    "watch": "node public/watch.js CORS",
+    "publish": "node publish.js"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7"
+  }
+}
