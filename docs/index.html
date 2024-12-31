@@ -6,7 +6,7 @@
 name="viewport"
 content="width=device-width, initial-scale=1.0"
 >
-<title>CORS</title>
+<title>Finding your way around CORS</title>
 <link rel="stylesheet" href="../public/styles.css">
 <link rel="stylesheet" href="../public/media-queries.css">
 <link rel="stylesheet" href="../public/prism/prism.css">
@@ -19,21 +19,1535 @@ content="width=device-width, initial-scale=1.0"
 <body>
 <main id="main">
 <header>
-<h1>CORS</h1>
-<h3>(set subtitle in 99-Intro.md, if required)</h3>
+<h1>Finding your way around CORS</h1>
+<h3>with a basic Express server and VS Code’s debugger</h3>
 <h4>December 2024</h4>
 </header>
 
+<!-- A Basic Express Server -->
+<section id="a-basic-express-server" aria-labelledby="a-basic-express-server" data-item="A Basic Express Server">
+<h2>
+<a href="#a-basic-express-server"> Setting up a bare-bones Express
+server</a>
+</h2>
+<p>Here are the steps that you need to create a very basic Express
+server, and check that it is working as expected.</p>
+<ol type="1">
+<li><p>Start a project folder for the backend</p>
+<pre class="language-bash wrap"><code class="language-bash wrap">mkdir backend && cd backend && npm init -y</code></pre></li>
+<li><p>Install the following dependencies</p>
+<pre class="language-bash wrap"><code class="language-bash wrap">npm install express cors</code></pre></li>
+<li><p>Install nodemon as a dev dependency, to restart the server
+whenever any changes are made</p>
+<pre class="language-bash wrap"><code class="language-bash wrap">npm install --save-dev nodemon</code></pre></li>
+<li><p>Add <code>"start": "nodemon app.js",</code> to “scripts” section
+of <code>package.json</code>, which should now look something like
+this:</p></li>
+</ol>
+<pre class="language-json line-numbers"><code class="language-json line-numbers"><i>{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    </i><b>"start": "nodemon app.js",</b><i>
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}</i></code></pre>
+<p><small style="color:orange">Listing 1</small></p>
+<ol start="5" type="1">
+<li>Create a file named <code>app.js</code> with the following
+script:</li>
+</ol>
+<pre class="language-javascript line-numbers"><code class="language-javascript line-numbers">const PORT = 3000
+
+// Initialize the Express app
+const express = require('express')
+const app = express()
+
+
+app.get('/', (req, res) =&gt; {
+  // Respond to a request with a timed message giving
+  // the URL to where the server received the request
+  const { protocol, hostname } = req
+  const message = `&lt;pre&gt;
+Connected to ${protocol}://${hostname}:${PORT}
+${Date()}
+&lt;/pre&gt;`
+
+  res.send(message)
+})
+
+
+app.listen(PORT, optionalCallbackForListen) 
+
+
+//Print out some useful information in the Terminal
+function optionalCallbackForListen() {
+  // Check what IP addresses are used by your 
+  // development computer.
+  const nets = require("os").networkInterfaces()
+  const ips = Object.values(nets)
+  .flat()
+  .filter(({ family }) =&gt; (
+    family === "IPv4")
+  )
+  .map(({ address }) =&gt; address)
+
+  // ips will include `127.0.0.1` which is the
+  // "loopback" address for your computer. This
+  // address is not accessible from other
+  // computers on your network. The host name
+  // "localhost" can be used as an alias for
+  // `127.0.0.1`, so you can add that, too.
+  ips.unshift("localhost")
+
+  // Show in the Terminal the URL(s) where you
+  // can connect to your server  
+  const hosts = ips.map( ip =&gt; (
+    `http://${ip}:${PORT}`)
+  ).join("\n  ")
+  console.log(`Express server listening at:
+  ${hosts}`);
+}</code></pre>
+<p><small style="color:orange">Listing 2</small></p>
+<details class="note" open>
+<summary>
+optionalCallbackForListen!?
+</summary>
+<p>The <code>optionalCallbackForListen()</code> in the script above
+contains some advance code that I won’t explain here. You can think of
+it as a black box that prints out in the console all the IP addresses
+that you can use to connect to your Express server.</p>
+</details>
+<ol start="6" type="1">
+<li>In the Terminal, run:</li>
+</ol>
+<pre class="language-bash wrap"><code class="language-bash wrap"> npm start</code></pre>
+<ol start="7" type="1">
+<li>You should see something like this:</li>
+</ol>
+<pre class="language-bash wrap"><code class="language-bash wrap">Express server listening at:
+  http://localhost:3000
+  http://127.0.0.1:3000  
+  http://192.168.0.11:3000</code></pre>
+<p><small style="color:orange">Listing 3</small></p>
+<details class="note" open>
+<summary>
+Where the server is listening
+</summary>
+<p>You should see at least the first two entries in this list. You will
+see more entries if you have a connection to a network, via Wi-Fi or an
+Ethernet (RJ45) cable. The IP address of any of these additional entries
+is likely to be different from what is shown above.</p>
+</details>
+<ol start="8" type="1">
+<li>Ctrl-click or Cmd-click on a link to open your browser. You should
+see something like this:</li>
+</ol>
+<pre class="language-bash wrap"><code class="language-bash wrap">Connected to http://192.168.0.11:3000 
+Wed Feb 21 2024 10:54:05 GMT+0200 (Eastern European Time)</code></pre>
+<p>The hostname and port number will depend on your network, on your
+choices, and on which link you clicked on.</p>
+<details class="note" open>
+<summary>
+Local Area Network
+</summary>
+<p>The links to <a
+href="http://localhost:3000">http://localhost:3000</a> and <a
+href="http://127.0.0.1:3000">http://127.0.0.1:3000</a> will only work
+from the same computer where the server is running. If you see any other
+links, then you can connect to these from any other device on your
+network. In my case, for example, I can use the browser on my smartphone
+to connect to http://192.168.0.11:3000, and I will see the result shown
+above.</p>
+</details>
+</section>
+<!-- Inspecting Request Headers -->
+<section id="request-headers" aria-labelledby="request-headers" data-item="Request Headers">
+<h2>
+<a href="#request-headers">Inspecting the <code>headers</code> in the
+requests</a>
+</h2>
+<p>When your browser connects to a server, its request contains a lot of
+information. The server needs this information to work out what to send
+in response. If the request seems to come from an untrustworthy source,
+the server should send a response indicating that it refuses to send
+what was requested.</p>
+<p>Here’s how you can see what <em>headers</em> have been sent to the
+server by the browser:</p>
+<ol type="1">
+<li>Add a new <em>route</em> to the <code>app.js</code> script:</li>
+</ol>
+<pre class="language-javascript line-numbers" data-start="8"><code class="language-javascript line-numbers"><i>app.get('/', (req, res) =&gt; {
+  // Respond to a request with a timed message giving
+  // the URL to where the server received the request
+  const { protocol, hostname } = req
+  const message = `&lt;pre&gt;
+Connected to ${protocol}://${hostname}:${PORT}
+${Date()}
+&lt;/pre&gt;`
+
+  res.send(message)
+})
+
+</i><b>app.get('/headers', (req, res) =&gt; {
+  const message = `&lt;pre&gt;
+${JSON.stringify(req.headers, null, "  ")}
+&lt;/pre&gt;`
+
+  res.send(message)
+})</b><i>
+
+app.listen(PORT, optionalCallbackForListen)</i> </code></pre>
+<p><small style="color:orange">Listing 4</small></p>
+<p>Because you are using <code>nodemon</code> to run
+<code>app.js</code>, the server will restart immediately after you save
+your changes. Any new requests made to the server will apply the new
+code.</p>
+<ol start="2" type="1">
+<li><p>In the address bar of your browser, add <code>/headers</code>
+after the root URL for the server. The address should look something
+like…</p>
+<pre class="language-bash wrap"><code class="language-bash wrap">http://192.168.0.11:3000/headers</code></pre></li>
+</ol>
+<p>… but the actual hostname will depend on the link that you chose to
+click on.</p>
+<ol start="3" type="1">
+<li>When you visit this URL, you should see something like this in your
+browser…</li>
+</ol>
+<pre class="language-json wrap"><code class="language-json wrap">{
+  "host": "192.168.0.11:3000",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:122.0) Gecko/20100101 Firefox/122.0",
+  "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "accept-language": "en-GB,en;q=0.7,en-US;q=0.3",
+  "accept-encoding": "gzip, deflate",
+  "dnt": "1",
+  "sec-gpc": "1",
+  "connection": "keep-alive",
+  "upgrade-insecure-requests": "1",
+  "if-none-match": "W/\"1f8-tKI1cj2bpbkgxIdZM72V7n0xKOs\""
+}</code></pre>
+<p><small style="color:orange">Listing 5</small><br><br />
+… and possibly some other headers.</p>
+<p>For more details, see <a
+href="https://developer.mozilla.org/en-US/docs/Glossary/Request_header">here</a>.</p>
+<details class="tldr">
+<summary>
+Where the headers come from
+</summary>
+<p>The <code>req</code> object does not have a property of its own
+called <code>headers</code>. So where does <code>req.headers</code> come
+from?</p>
+<p>Express is built as a wrapper for Node’s built-in <a
+href="https://nodejs.org/api/http.html"><code>http</code></a> module.
+Express creates the <code>req</code> object as an instance of the native
+<a
+href="https://nodejs.org/api/http.html#class-httpincomingmessage">http.IncomingMessage</a>
+class. You can see this in the script at
+<code>node_modules/express/lib/request.js</code>:</p>
+<pre class="language-javascript line-numbers" data-start="31"><code class="language-javascript line-numbers">var req = Object.create(http.IncomingMessage.prototype)</code></pre>
+<p>The value for <code>req.headers</code> is provided by the <a
+href="https://nodejs.org/api/http.html#messageheaders"><code>headers</code></a>
+property of the <code>IncomingMessage</code> prototype.</p>
+</details>
+</section>
+<!-- Using Dev Tools -->
+<section id="using-dev-tools" aria-labelledby="using-dev-tools" data-item="Using Browser Dev Tools">
+<h2>
+<a href="#using-dev-tools">Using your browser’s Developer Tools to
+inspect the headers</a>
+</h2>
+<p>To be honest, you didn’t actually need to create a separate
+<code>/headers</code> route to deliver the request headers to your
+browser. You can find this information through the Developer Tools in
+your browser itself.</p>
+<ol type="1">
+<li>Open the Developer Tools of your browser and activate the Network
+tab.</li>
+<li>Ensure that the All button (at the left of the line of data type
+buttons near the top) is selected</li>
+<li>You should see a table containing a list of requests that your
+browser has made to the server</li>
+<li>Click on the Domain or Name column, to open a pane where you can
+choose to select the Headers tab.</li>
+<li>If necessary, click on the disclosure triangles for Response Headers
+and Request Headers, so that all headers are visible.</li>
+</ol>
+<p>Here is a screen shot from Google Chrome. The display in your browser
+may be different.</p>
+<figure>
+<img src="images/network.png"
+alt="The Network tab of Chrome’s Developer Tools" />
+<figcaption aria-hidden="true">The Network tab of Chrome’s Developer
+Tools</figcaption>
+</figure>
+<h3 id="the-curious-incident-of-the-origin-key-in-req.headers">The
+curious incident of the <code>origin</code> key in
+<code>req.headers</code></h3>
+<p>As you may already know, the <code>cors</code> module uses the value
+of <code>req.headers.origin</code> to decide what action to take. But as
+you can see, there is <em>no</em> entry with the key <a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin"><code>origin</code></a>,
+either in the <code>req.headers</code> object that is displayed in your
+browser window or in the Network tab of the Developer Tools.</p>
+<p>This is because your request is made directly from the address bar of
+your browser. The browser considers that any direct request like this is
+innocent, and thus trustworthy, so it doesn’t send an
+<code>origin</code> header.</p>
+<p>If there <em>were</em> a value for <code>req.headers.origin</code> it
+would have a value with one of these formats:</p>
+<pre class="language-bash wrap"><code class="language-bash wrap">&lt;scheme&gt;://&lt;hostname&gt;
+&lt;scheme&gt;://&lt;hostname&gt;:&lt;port&gt;</code></pre>
+<p>Here are some examples of what <code>req.headers.origin</code> could
+look like:</p>
+<pre class="language-bash wrap"><code class="language-bash wrap">https://192,168.0.42
+https://www.example.com
+http://example.com:3000</code></pre>
+<p>The lack of an entry for <code>origin</code> indicates that the
+browser considers that the request is for a resource from the <em>same
+site</em>, and so the request can be trusted.</p>
+</section>
+<!-- Same Origin Cross Origin -->
+<section id="same-origin-cross-origin" aria-labelledby="same-origin-cross-origin" data-item="Same- and Cross-Origin">
+<h2>
+<a href="#same-origin-cross-origin">Same-Origin and Cross-Origin
+Requests</a>
+</h2>
+<p>So an important question is: <strong>What is the simplest way to
+connect to your server from a potentially <em>untrustworthy</em>
+origin?</strong>. In technical terms: how do you make a <em>cross-origin
+request</em>?</p>
+<p>The quickest way to do this is to visit a site (any site) and make a
+request from your browser <em>Console</em> rather than from the address
+bar. This will make the browser send the request <em>as if it came from
+the site that is currently displayed</em>.</p>
+<p>Before sending a <em>cross</em>-origin request, you might want to see
+how this process will work for a <em>same</em>-origin request.</p>
+<ol type="1">
+<li>In your browser, visit <a
+href="http://localhost:3000/headers">http://localhost:3000/headers</a>.
+You should see in your browser the same details that are given in
+Listing 5 above.</li>
+<li>Open the Developer Console in your browser and paste in the
+following code:</li>
+</ol>
+<pre class="language-javascript wrap"><code class="language-javascript wrap">options = {"method": 'GET', "Content-Type": 'application/json'};
+fetch('http://localhost:3000/headers', options)
+.then(res =&gt; res.text())
+.then(text =&gt; console.log(text))
+.catch(error =&gt; console.log("Error", error))</code></pre>
+<p><small style="color:orange">Listing 6</small></p>
+<details class="note" open>
+<summary>
+Promises?
+</summary>
+<p>If you understand this code, and the way it uses <a
+href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promises</a>,
+great! If not, you can just think of it as a black box that does
+something useful for you, and you can learn about how it works
+later.</p>
+<p>The one important point to note is the use of the <code>GET</code>
+method, as this will come up again later.</p>
+</details>
+<ol start="3" type="1">
+<li>Press the Enter key.</li>
+</ol>
+<p>The code that you pasted requests the exact same page from the same
+server as the page you are visiting. Your browser will understand this,
+and send the appropriate headers. As a result, you should see something
+like this (complete with the <code>&lt;pre&gt;</code> and
+<code>&lt;/pre&gt;</code> tags):</p>
+<pre class="language-md wrap"><code class="language-md wrap"><i>&lt;pre&gt;
+{
+  "host": "localhost:3000",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:122.0) Gecko/20100101 Firefox/122.0",
+  "accept": "*/*",
+  "accept-language": "en-GB,en;q=0.7,en-US;q=0.3",
+  "accept-encoding": "gzip, deflate, br",
+  </i><b>"referer": "http://localhost:3000/headers",</b></i>
+  "dnt": "1",
+  "sec-gpc": "1",
+  "connection": "keep-alive",
+  </i><b>"sec-fetch-dest": "empty",
+  "sec-fetch-mode": "cors",
+  "sec-fetch-site": "same-origin"</b></i>
+}
+&lt;/pre&gt;</i></code></pre>
+<p><small style="color:orange">Listing 7</small></p>
+<h3 id="whats-new">What’s new?</h3>
+<ul>
+<li>There is an entry for <code>"referer"</code>, which shows the page
+that was open when you sent the request: <a
+href="http://localhost:3000/headers">http://localhost:3000/headers</a>.</li>
+</ul>
+<p><em>And, yes: <code>referer</code> is a spelling mistake. This
+mistake was made in the original specifications, so it has become part
+of the standard. That’s the way it is now. You may be familiar with the
+<a
+href="%5BAttributes%5D(https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/noreferrer)"><code>noreferrer</code>
+HTML attribute</a> or the <a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy"><code>Referrer-Policy</code>
+header</a>. This is spelt correctly.</em></p>
+<p>Also there are three new properties whose names begin with
+“sec-fetch-”:</p>
+<ul>
+<li>“<a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-Dest">sec-fetch-dest</a>”:
+“empty”,</li>
+<li>“<a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-Mode">sec-fetch-mode</a>”:
+“cors”,</li>
+<li>“<a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-Site">sec-fetch-site</a>”:
+“same-origin”</li>
+</ul>
+<p>You can follow the links for the different properties to find an
+explanation of what they mean and what they do.</p>
+<p>But there is still no <code>origin</code> property.</p>
+<p>This test shows that your browser will tell the server which page
+made the request, and whether this page has the <code>same-origin</code>
+as the data that is being requested.</p>
+</section>
+<!-- A Cross Origin Request -->
+<section id="a-cross-origin-request" aria-labelledby="a-cross-origin-request" data-item="A Cross Origin Request">
+<h2>
+<a href="#a-cross-origin-request">Making a Cross-Origin Request</a>
+</h2>
+<p>As you saw in step <a href="#a-basic-express-server">2. A Basic
+Express Server</a>, you can connect to your server through at least two
+different URLs. What happens if you try to access the server at one URL
+through a page that was served from the other?</p>
+<ol type="1">
+<li><p>With your browser’s Developer Console active, press the Up arrow
+on your keyboard. This will read the last command from the Console’s
+history and paste it back into the Console.</p></li>
+<li><p>Change just the hostname from <code>localhost</code> to
+<code>127.0.0.1</code>, as shown below:</p></li>
+</ol>
+<pre class="language-javascript wrap"><code class="language-javascript wrap">options = {"method": 'GET', "Content-Type": 'application/json'};
+fetch('http://127.0.0.1:3000/headers', options)
+.then(res =&gt; res.text())
+.then(text =&gt; console.log(text))
+.catch(error =&gt; console.log("Error", error))</code></pre>
+<p><small style="color:orange">Listing 8</small></p>
+<ol start="3" type="1">
+<li>Press the Enter key.</li>
+</ol>
+<p>This time, depending on which browser you are using, you should see
+something like this in the Console:</p>
+<pre class="language-bash wrap"><code class="language-bash wrap">▶ Promise { &lt;state&gt;: "pending" }
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.
+
+Error TypeError: NetworkError when attempting to fetch resource.</code></pre>
+<p><small style="color:orange">Listing 9</small></p>
+<p>Whatever browser you are using, the message should tell you that
+there is no <code>‘Access-Control-Allow-Origin’</code> CORS header set.
+And instead of logging the expected <code>req.headers</code> data, the
+operation triggers an error.</p>
+<h3 id="what-does-this-mean">What does this mean?</h3>
+<p>It means that, by default, your server will refuse to serve any data
+to a web page on a site where the hostname of the site’s server is not
+the same as the hostname from which the data is requested. And this is
+true, even when it is <em>exactly the same server app</em> that is
+accessible through two different host names.</p>
+</section>
+<!-- Allowing CORS -->
+<section id="allowing-cors" aria-labelledby="allowing-cors" data-item="Allowing CORS Requests">
+<h2>
+<a href="#allowing-cors">Allowing Cross-Origin Resource Sharing</a>
+</h2>
+<p>Back in step <a href="#a-basic-express-server">2. A Basic Express
+Server</a>, you installed a Node module called <code>cors</code>, but
+you haven’t used it yet.</p>
+<ol type="1">
+<li>Add this code to your <code>app.js</code> file, just after the line
+that says: <code>const app = express()</code></li>
+</ol>
+<pre class="language-javascript line-numbers"><code class="language-javascript line-numbers"><i>const PORT = 3000
+
+// Initialize the Express app
+const express = require('express')
+const app = express()</i>
+<b>const cors = require('cors')
+
+const corsOptions = {
+  origin: (origin, callback) =&gt; {
+    console.log("origin:", origin);
+    callback(null, true)
+  }
+}
+
+app.use(cors(corsOptions))</b></code></pre>
+<p><small style="color:orange">Listing 10</small></p>
+<p>I’ll go deeper into what this code does in the next section <a
+href="#what-cors-does">8. What CORS Does</a>. For now, it’s enough to
+know that the code you have just added will allow any origin to connect
+with your Express server.</p>
+<p>For reference, the complete code in the <code>app.js</code> file
+should look like this now:</p>
+<pre class="language-javascript line-numbers"><code class="language-javascript line-numbers">const PORT = 3000
+
+// Initialize the Express app
+const express = require('express')
+const app = express()
+const cors = require('cors')
+
+const corsOptions = {
+  origin: (origin, callback) =&gt; {
+    console.log("origin:", origin);
+    callback(null, true)
+  }
+}
+
+app.use(cors(corsOptions))
+
+
+app.get('/', (req, res) =&gt; {
+  // Respond to a request with a timed message giving
+  // the URL to where the server received the request
+  const { protocol, hostname } = req
+  const message = `&lt;pre&gt;
+Connected to ${protocol}://${hostname}:${PORT}
+${Date()}
+&lt;/pre&gt;`
+
+  res.send(message)
+})
+
+
+app.get('/headers', (req, res) =&gt; {
+  const message = `&lt;pre&gt;
+${JSON.stringify(req.headers, null, "  ")}
+&lt;/pre&gt;`
+
+  res.send(message)
+})
+
+
+app.listen(PORT, optionalCallbackForListen) 
+
+
+//Print out some useful information in the Terminal
+function optionalCallbackForListen() {
+  // Check what IP addresses are used by your 
+  // development computer.
+  const nets = require("os").networkInterfaces()
+  const ips = Object.values(nets)
+  .flat()
+  .filter(({ family }) =&gt; (
+    family === "IPv4")
+  )
+  .map(({ address }) =&gt; address)
+
+  // ips will include `127.0.0.1` which is the
+  // "loopback" address for your computer. This
+  // address is not accessible from other
+  // computers on your network. The host name
+  // "localhost" can be used as an alias for
+  // `127.0.0.1`, so you can add that, too.
+  ips.unshift("localhost")
+
+  // Show in the Terminal the URL(s) where you
+  // can connect to your server  
+  const hosts = ips.map( ip =&gt; (
+    `http://${ip}:${PORT}`)
+  ).join("\n  ")
+  console.log(`Express server listening at:
+  ${hosts}`);
+}</code></pre>
+<p><small style="color:orange">Listing 11</small></p>
+<ol start="2" type="1">
+<li>In the Developer Console for the page served by
+<code>localhost</code>, rerun your last command, which made a request to
+<code>127.0.0.1</code>. This time, your request should succeed, and you
+should see the data that you expect from <code>req.headers</code>, which
+should look something like this ():</li>
+</ol>
+<pre class="language-bash wrap"><code class="language-bash wrap"><i>Promise { &lt;state&gt;: "pending" }
+&lt;pre&gt;
+{
+  "host": "127.0.0.1:3000",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:123.0) Gecko/20100101 Firefox/123.0",
+  "accept": "*/*",
+  "accept-language": "en-GB,en;q=0.7,en-US;q=0.3",
+  "accept-encoding": "gzip, deflate, br",
+  </i><b>"referer": "http://localhost:3000/",
+  "origin": "http://localhost:3000",</b><i>
+  "dnt": "1",
+  "sec-gpc": "1",
+  "connection": "keep-alive",</i>
+  <b>"sec-fetch-dest": "empty",</b><i>
+  "sec-fetch-mode": "cors",
+  "sec-fetch-site": </i><b>"cross-site",</b><i>
+  "if-none-match": "W/\"1e8-AvXgPd5sDM9iBxxmm97LaXmXJ+4\""
+}
+&lt;pre&gt;</i></code></pre>
+<h3 id="whats-new-this-time">What’s new this time?</h3>
+<p>When you made a request to <code>localhost</code> from a page served
+by <code>localhost</code>: * There was no <code>"origin"</code> entry in
+<code>req.headers</code>. There is now, and its value is
+<code>"http://localhost:3000"</code>. * The value for
+<code>"sec-fetch-site"</code> was <code>"same-origin"</code>. Now it is
+<code>"cross-site"</code>.</p>
+<p>If you look in the Terminal where you started your server, you should
+see a new item that has been logged:</p>
+<pre class="language-bash wrap"><code class="language-bash wrap">origin: http://localhost:3000</code></pre>
+<p>This was caused by the code that you have just added (see Listing
+10).</p>
+</section>
+<!-- What CORS Does -->
+<section id="what-cors-does" aria-labelledby="what-cors-does" data-item="What CORS Does">
+<h2>
+<a href="#what-cors-does">Discovering what the <code>cors</code> Node
+module does</a>
+</h2>
+<p>There are easier ways of using the <code>cors</code> module than the
+code I have used here, but this technique allows you to look under the
+hood at what the module is actually doing.</p>
+<h3 id="using-the-debugger">Using the Debugger</h3>
+<details class="env" open>
+<summary>
+Debugging with VS Code
+</summary>
+<p>If you are using <a
+href="https://code.visualstudio.com/download">Visual Studio Code</a> as
+your code editor, you can follow the exact steps I give below. If you
+are familiar with using the debugger in a different environment, you may
+have to adjust the steps to suit.</p>
+<p>If you are not using VS Code and the whole concept of debugging a
+script alarms you, no worries. You can just follow along by reading the
+chunks of <code>cors</code> code that I give below.</p>
+</details>
+<p>Before you can use the debugger to inspect the code used by your
+server app, you will need to stop the server.</p>
+<ol type="1">
+<li>Click on the Terminal where your ran <code>npm start</code> earlier
+to give it keyboard focus, and then type <code>Ctrl-C</code> to stop the
+server. You should see <code>^C</code> on one line and the white
+insertion caret on the next, indicating that the Terminal is currently
+not doing anything.</li>
+</ol>
+<figure>
+<img src="images/stopServer.png" alt="Stop the server" />
+<figcaption aria-hidden="true">Stop the server</figcaption>
+</figure>
+<ol type="1">
+<li>In VS Code, open the <code>app.js</code> file and click just to the
+left of the line number for the line <code>callback(null, true)</code>.
+A red dot should appear to indicate that you have set a debugger
+breakpoint.</li>
+<li>Open the Debug Console pane in place of the Terminal pane</li>
+<li>Select Run &gt; Start Debugging (or press the <code>F5</code>‡ key
+on your keyboard)</li>
+</ol>
+<details class="note" open>
+<summary>
+F5 ‡
+</summary>
+<p>Depending on how your keyboard is set up, you may need to press the
+<code>fn</code> key at the same time as you press <code>F5</code>. If
+so, you will need to press <code>fn</code> at the same time as you press
+any of the <code>F</code> keys in the instructions below.</p>
+</details>
+<p>The composite image below illustrates these steps:</p>
+<figure>
+<img src="images/startDebugger.png" alt="Debug CORS callback" />
+<figcaption aria-hidden="true">Debug CORS callback</figcaption>
+</figure>
+<ol start="4" type="1">
+<li>In the Developer Console in your browser, press the Up arrow and
+then the Enter key, to send the last command again.</li>
+</ol>
+<p>The VS Code window should now be brought to the front. As in Figure 4
+below, you should see that:</p>
+<ul>
+<li>There is a little yellow arrow around the red debugger breakpoint
+that you set in step 25. This indicates that this line has not yet been
+executed.</li>
+<li>The line <code>callback (null, true)</code> is highlighted.</li>
+<li>The Debug Console shows a new line:
+<code style="color: #19F">origin: http://localhost:3000</code>, because
+the line <code>console.log("origin:", origin)</code> has just been
+executed.</li>
+<li>The Control Panel for the debugger has been updated. It now shows
+active arrow buttons for Continue, Step Over, Step Into and Step
+Out.</li>
+</ul>
+<figure>
+<img src="images/stepInto.png"
+alt="Step Into the code for the cors module" />
+<figcaption aria-hidden="true">Step Into the code for the
+<code>cors</code> module</figcaption>
+</figure>
+<ol start="5" type="1">
+<li>Click on the Step Into button (or press <code>F11</code>).</li>
+</ol>
+<p>This will take you into the code of the <code>cors</code> module,
+where you can follow step-by-step what <code>cors</code> does.</p>
+<details class="tip" open>
+<summary>
+Following without a debugger
+</summary>
+<p>If you are simply reading this article without following the
+debugging steps, you can open
+<code>backend/node_modules/cors/lib/index.js</code> and look for the
+code that is shown below.</p>
+</details>
+<figure>
+<img src="images/middleware.png"
+alt="Inside the corsMiddleware function" />
+<figcaption aria-hidden="true">Inside the <code>corsMiddleware</code>
+function</figcaption>
+</figure>
+<p>On the left, of the VS Code window, you will see a panel that shows
+the value of the variables that are available in the current scope.
+Specifically, in the “Local” section at the top, you can see that a
+custom <code>err2</code> variable has the value <code>null</code> and
+the variable <code>origin</code> has the value <code>true</code>. This
+is the value that you gave to the second argument of the call to
+<code>callback</code> in your <code>app.js</code> file.</p>
+<p>You can click on the disclosure arrow for the first “Closure” entry
+to see the value of the <code>corOptions</code> object. You created this
+object in the <code>app.js</code> file, and gave it a property called
+<code>origin</code> whose value is a function. Here you can seen that
+function displayed.</p>
+<p>Since then, the <code>cors</code> module has been busy adding other
+properties (like <code>err2</code>). The call you made from the browser
+Console explicitly used the method <code>GET</code>, which is one of the
+methods that the <code>corsOptions</code> object lists in its
+<code>methods</code> property. You’ll see in a moment why this
+matters.</p>
+<h3 id="calling-cors">Calling <code>cors</code></h3>
+<p>The expression <code>err2 || !origin</code> is falsy, so the
+following lines will be executed:</p>
+<pre class="language-js line-numbers" data-start="233"><code class="language-js line-numbers">corsOptions.origin = origin;
+cors(corsOptions, req, res, next);</code></pre>
+<p><small style="color:orange">Listing 12</small></p>
+<ol start="6" type="1">
+<li>Get ready to press the Step Into button in the Control panel again,
+and focus your attention on the value of <code>corsOptions.origin</code>
+in the Variables pane.</li>
+<li>Press the Step Into button.</li>
+</ol>
+<p>Did you see that the value of <code>corsOptions.origin</code>
+changes? It changes from being the function that you created to the
+result of the callback used by that function:
+<code>corsOptions.origin</code> becomes <code>true</code>.</p>
+<ol start="8" type="1">
+<li>Press the Step Into button again. The debugger will step into the
+<code>cors()</code> function.</li>
+</ol>
+<figure>
+<img src="images/corsFunction.png" alt="Inside the cors() function" />
+<figcaption aria-hidden="true">Inside the <code>cors()</code>
+function</figcaption>
+</figure>
+<p>The <code>corsOptions</code> object is passed as an
+<code>options</code> variable, so its name has changed but its content
+is still the same. The <code>req</code> and <code>res</code> objects
+that were available to your code in the <code>app.js</code> script are
+also available here.</p>
+<p>The <code>cors()</code> function:</p>
+<ul>
+<li>Creates an empty array called <code>headers</code></li>
+<li>Reads in the value of <code>method</code> from the <code>req</code>
+object and converts it to uppercase. This will be the value
+<code>GET</code> that you set in your call from the browser console, so
+it was already uppercase.</li>
+<li>Sees that <code>method</code> is not <code>"OPTIONS"</code>, so it
+jumps over the first part of the <code>if ... else</code> statement, and
+next it runs the command:</li>
+</ul>
+<pre class="language-javascript line-numbers" data-start="184"><code class="language-javascript line-numbers">headers.push(configureOrigin(options, req));</code></pre>
+<p><small style="color:orange">Listing 13</small></p>
+<ol start="9" type="1">
+<li>Press the Step Into button four more times, so that the debugger
+steps into the <code>configureOrigin()</code> function.</li>
+</ol>
+<h3 id="the-configureorigin-function">The <code>configureOrigin()</code>
+function</h3>
+<p>The <code>configureOrigin()</code> function is where
+<code>cors</code> decides whether to accept the request or not. It looks
+at both the value of <code>req.headers.origin</code> and the value for
+<code>options.origin</code>.</p>
+<p>In the current case, <code>req.headers.origin</code> is
+<code>"http://localhost:3000"</code>, because that’s the hostname for
+the page from which you made the request, and
+<code>options.origin</code> is <code>true</code>, because that is the
+value you gave in the second argument to
+<code>callback(null, true)</code>.</p>
+<p>Here’s the function for <code>cors@2.8.5</code> in full:</p>
+<pre class="language-javascript line-numbers" data-start="36"><code class="language-javascript line-numbers">function configureOrigin(options, req) {
+    var requestOrigin = req.headers.origin,
+      headers = [],
+      isAllowed;
+
+    if (!options.origin || options.origin === '*') {
+      // allow any origin
+      headers.push([{
+        key: 'Access-Control-Allow-Origin',
+        value: '*'
+      }]);
+    } else if (isString(options.origin)) {
+      // fixed origin
+      headers.push([{
+        key: 'Access-Control-Allow-Origin',
+        value: options.origin
+      }]);
+      headers.push([{
+        key: 'Vary',
+        value: 'Origin'
+      }]);
+    } else {
+      isAllowed = isOriginAllowed(requestOrigin, options.origin);
+      // reflect origin
+      headers.push([{
+        key: 'Access-Control-Allow-Origin',
+        value: isAllowed ? requestOrigin : false
+      }]);
+      headers.push([{
+        key: 'Vary',
+        value: 'Origin'
+      }]);
+    }
+
+    return headers;
+  }</code></pre>
+<p><small style="color:orange">Listing 14</small></p>
+<p>The case for treating <code>options.origin</code> when it is
+<code>true</code> is right at the end, so this gives you the chance to
+review what other values <code>options.origin</code> could have.</p>
+<p>The <a
+href="https://expressjs.com/en/resources/middleware/cors.html#configuration-options">documentation
+for Express</a> indicates that <code>origin</code> can have a variety of
+different types:</p>
+<ul>
+<li>Boolean</li>
+<li>String</li>
+<li>RegExp</li>
+<li>Array of String or RegExp items OR</li>
+<li>a function like the one you provided in <code>app.js</code> that
+eventually sets <code>origin</code> to one of the four types listed
+above.</li>
+</ul>
+<p>The <code>configureOrigin()</code> function considers these types one
+by one.</p>
+<h3 id="options.origin-is-false-or"><code>options.origin</code> is
+<code>false</code> or <code>"*"</code></h3>
+<pre class="language-javascript line-numbers" data-start="41"><code class="language-javascript line-numbers">if (!options.origin || options.origin === '*') {
+  // allow any origin
+  headers.push([{
+    key: 'Access-Control-Allow-Origin',
+    value: '*'
+  }]);
+}</code></pre>
+<p><small style="color:orange">Listing 15</small></p>
+<details class="tldr">
+<summary>
+Glitch?
+</summary>
+<p>In practice, it seems impossible to get to this point in the code
+when <code>options.origin</code> is falsy (<code>false</code>,
+<code>undefined</code>, <code>0</code>, <code>null</code> or
+<code>""</code>). If you call <code>cors()</code> with no arguments, the
+<code>cors</code> script will use the default value of <code>"*"</code>
+for <code>origin</code>.</p>
+<p>Look for the line
+<code>var corsOptions = assign({}, defaults, options)</code>, which
+ensures that if <code>options</code> gives no value for
+<code>origin</code> then the value will be provided by …</p>
+<pre class="language-javascript line-numbers" data-start="8"><code class="language-javascript line-numbers">var defaults = {
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};</code></pre>
+<p>If you use <code>{ origin: false }</code>, then the expression
+highlighted in Figure 5 will evaluate to true, and the whole process
+that you have just stepped through will be skipped.</p>
+</details>
+<p>The key point to notice here is that if the <code>origin</code> is to
+be allowed, an object with the <code>key</code>
+<code>'Access-Control-Allow-Origin'</code> will be added to the
+<code>headers</code> array, together with a <code>value</code> that
+represents the permitted origin.</p>
+<h3 id="options.origin-is-a-string"><code>options.origin</code> is a
+String</h3>
+<pre class="language-javascript line-numbers" data-start="47"><code class="language-javascript line-numbers">else if (isString(options.origin)) {
+  // fixed origin
+  headers.push([{
+    key: 'Access-Control-Allow-Origin',
+    value: options.origin
+  }]);
+  headers.push([{
+    key: 'Vary',
+    value: 'Origin'
+  }]);
+}</code></pre>
+<p><small style="color:orange">Listing 16</small></p>
+<p>If you had provide a string as the value for
+<code>options.origin</code> in your <code>app.js</code> script, then the
+value for <code>'Access-Control-Allow-Origin'</code> would now be set to
+that specific string. A <a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary"><code>Vary</code>
+header</a> is also set to tell the browser that the value of
+<code>Origin</code> had an effect on the response that the server
+returns.</p>
+<h3
+id="options.origin-is-a-regexp-an-array-or-some-other-value"><code>options.origin</code>
+is a RegExp, an array or some other value</h3>
+<p>In the current case, <code>options.origin</code> is
+<code>true</code>, so none of the expressions in the
+<code>if ... else</code> statement that deal with strings evaluate to
+true. As a result, the final part of the <code>if ... else</code>
+statement applies.</p>
+<pre class="language-javascript line-numbers" data-start="57"><code class="language-javascript line-numbers">else {
+  isAllowed = isOriginAllowed(requestOrigin, options.origin);
+  // reflect origin
+  headers.push([{
+    key: 'Access-Control-Allow-Origin',
+    value: isAllowed ? requestOrigin : false
+  }]);
+  headers.push([{
+    key: 'Vary',
+    value: 'Origin'
+  }]);
+}</code></pre>
+<p><small style="color:orange">Listing 17</small></p>
+<ol start="10" type="1">
+<li>Press the Step Into button a few more times, so that the debugger
+steps into the <code>isOriginAllowed()</code> function. This receives
+two arguments:</li>
+</ol>
+<ul>
+<li><code>origin</code>, which was read from
+<code>req.headers.origin</code></li>
+<li><code>allowedOrigin</code>, which was generated by the object that
+your <code>app.js</code> script applied to <code>cors()</code>, and
+which here is <code>true</code>.</li>
+</ul>
+<pre class="language-javascript line-numbers" data-start="19"><code class="language-javascript line-numbers">function isOriginAllowed(origin, allowedOrigin) {
+  if (Array.isArray(allowedOrigin)) {
+    for (var i = 0; i &lt; allowedOrigin.length; ++i) {
+      if (isOriginAllowed(origin, allowedOrigin[i])) {
+        return true;
+      }
+    }
+    return false;
+  } else if (isString(allowedOrigin)) {
+    return origin === allowedOrigin;
+  } else if (allowedOrigin instanceof RegExp) {
+    return allowedOrigin.test(origin);
+  } else {
+    return !!allowedOrigin;
+  }
+}</code></pre>
+<p><small style="color:orange">Listing 18</small></p>
+<p>This function return <code>true</code> if any one of the following is
+true:</p>
+<ul>
+<li><code>allowedOrigin</code> is an array and if (by recursion) any of
+the items in the array matches the <code>req.headers.origin</code>.</li>
+<li><code>allowedOrigin</code> is a string. This is only possible if the
+string were one of the items in an array, and so
+<code>isOriginAllowed()</code> has been called recursively.<br />
+<strong>Note that this is a case <em>insensitive</em> match and
+<code>req.headers.origin</code> is all in lowercase. This means that if
+you had used <code>["HTTP://127.0.0.1:3000/"]</code> instead of
+<code>true</code> in <code>app.js</code>, the part of the origin in
+uppercase would make the match fail.</strong></li>
+<li><code>allowedOrigin</code> is a Regular Expression that matches
+<code>req.headers.origin</code></li>
+<li><code>allowedOrigin</code> is any other truthy value.</li>
+</ul>
+<p>In the current case, <code>allowedOrigin</code> is <code>true</code>
+so <code>isOriginAllowed()</code> returns <code>true</code>.</p>
+<ol start="11" type="1">
+<li>Press the Step Into button until you reach the line
+<code>return !!allowedOrigin;</code>, which returns the value
+<code>true</code>, and find yourself back in the
+<code>configureOrigin()</code> function.</li>
+</ol>
+<h3 id="adding-access-control-allow-origin-with-the-value-true">Adding
+<code>'Access-Control-Allow-Origin'</code> with the value
+<code>true</code></h3>
+<p>Back in <code>configureOrigin()</code>, the
+<code>'Access-Control-Allow-Origin'</code> header is given either the
+value read from <code>req.headers.origin</code> or <code>false</code>,
+depending on what <code>isOriginAllowed()</code> returned.</p>
+<pre class="language-javascript line-numbers" data-start="60"><code class="language-javascript line-numbers">headers.push([{
+  key: 'Access-Control-Allow-Origin',
+  value: isAllowed ? requestOrigin : false
+}]);</code></pre>
+<p><small style="color:orange">Listing 19</small></p>
+<p>In this case, <code>isAllowed</code> is <code>true</code>, so the
+<code>value</code> associated with
+<code>'Access-Control-Allow-Origin'</code> is the origin of the page
+that made the request, as you can see in Figure 7 below.</p>
+<figure>
+<img src="images/headers.png"
+alt="headers returned by isOriginAllowed()" />
+<figcaption aria-hidden="true"><code>headers</code> returned by
+<code>isOriginAllowed()</code></figcaption>
+</figure>
+<h3 id="setting-the-response-headers">Setting the response headers</h3>
+<p>The <code>configureOrigin()</code> function populates an array called
+<code>headers</code> and returns this to the <code>cors()</code>
+function that called it.</p>
+<ol start="12" type="1">
+<li>Press the Step Into button a few more times, to step through the
+<code>if</code> statement in the <code>configureOrigin()</code>, until
+you find yourself back in the <code>cors()</code> function.</li>
+<li>You can press the Step Over button twice, to skip the calls to
+<code>configureCredentials()</code> and
+<code>configureExposedHeaders()</code>, which in this case simply add
+<code>null</code> to the <code>headers</code> array.</li>
+</ol>
+<figure>
+<img src="images/applyHeaders.png" alt="Step Over function calls" />
+<figcaption aria-hidden="true">Step Over function calls</figcaption>
+</figure>
+<ol start="14" type="1">
+<li>Press the Step Into button again to see what happens inside the
+<code>applyHeaders()</code> function.</li>
+</ol>
+<h3 id="applyheaders">applyHeaders()</h3>
+<p>The <code>applyHeaders()</code> function accepts two arguments:</p>
+<ul>
+<li>Hhe <code>headers</code> array that has just been created</li>
+<li>The <code>res</code> object which is also available in your
+<code>app.js</code> script.</li>
+</ul>
+<p>It iterates through the header array, and calls itself recursively if
+it finds a sub-array.</p>
+<ol start="15" type="1">
+<li>You can press the Step Into button multiple times until you reach
+the line:</li>
+</ol>
+<pre class="language-javascript line-numbers" data-start="153"><code class="language-javascript line-numbers">res.setHeader(header.key, header.value)</code></pre>
+<p><small style="color:orange">Listing 20</small></p>
+<p>The <a
+href="https://nodejs.org/api/http.html#requestsetheadername-value"><code>setHeader</code>
+function</a> is part of Node’s native <code>http</code> module code, so
+you cannot step into it. You can only use the debugger to step into
+JavaScript code in your own scripts and in Node modules.</p>
+<p>However, you can see the <em>result</em> of the
+<code>setHeader</code> call. To do this, you need set a second
+breakpoint in your <code>app.js</code> script which will be triggered
+when your app is ready to treat the request itself.</p>
+<p>To do this in VS Code:</p>
+<ol start="16" type="1">
+<li>Activate the Explorer pane</li>
+<li>Select the <code>app.js</code> script</li>
+<li>Scroll to the code shown in Figure 9 below</li>
+<li>Click just to the left of the line number where the variable
+<code>const message</code> is declared.</li>
+</ol>
+<figure>
+<img src="images/addBreakpoint.png" alt="Add breakpoint" />
+<figcaption aria-hidden="true">Add breakpoint</figcaption>
+</figure>
+<ol start="20" type="1">
+<li>Click on the Continue button in the debugger Control panel, as shown
+in Figure 10 below.</li>
+</ol>
+<p>The debugger will finish executing all the remaining instructions
+that were triggered by the call to <code>cors()</code> and then stop
+just before executing the next instruction in your <code>app.js</code>
+script.</p>
+<p>Node’s <code>http</code> module does not make
+<code>res.headers</code> object directly accessible. The <a
+href="https://nodejs.org/api/deprecations.html#deprecations_dep0066_outgoingmessage_prototype_headers_outgoingmessage_prototype_headernames"><code>res._headers</code>
+has been deprecated since Node version 12</a>, so you can’t trust
+it.</p>
+<p>The best way to see the value of the
+<code>'Access-Control-Allow-Origin'</code> header is to use the Watch
+panel of the Debugger pane.</p>
+<ol start="21" type="1">
+<li>Enter the expression <code>res.getHeaders()</code> into the Watch
+panel of the Debugger pane</li>
+<li>Press Enter</li>
+<li>Click on the disclosure arrow to show the individual key/value
+pairs.</li>
+</ol>
+<p>Note that the property name is all in lowercase.</p>
+<figure>
+<img src="images/viewHeader.png"
+alt="View the &#39;Access-Control-Allow-Origin&#39; header" />
+<figcaption aria-hidden="true">View the
+<code>'Access-Control-Allow-Origin'</code> header</figcaption>
+</figure>
+<p>You can also get the value of a <code>res.header</code> property
+directly if you know its name.</p>
+<ol start="24" type="1">
+<li>As in Figure 10 above, enter the expression
+<code>res.get("access-control-allow-origin")</code> in the Watch panel,
+and press Enter.</li>
+</ol>
+</section>
+<!-- Response From Server -->
+<section id="response-from-server" aria-labelledby="response-from-server" data-item="Response From Server">
+<h2>
+<a href="#response-from-server">Reviewing the response from the
+server</a>
+</h2>
+<p>The adventure into the <code>cors</code> module is over. It’s time to
+let Express deliver the response to the request.</p>
+<ol type="1">
+<li>Press the Step Over button in the debugger Control panel to create
+the <code>message</code> that is te be sent</li>
+<li>Press the Continue button to execute
+<code>res.send(message)</code></li>
+</ol>
+<figure>
+<img src="images/res.send.png" alt="Send the response" />
+<figcaption aria-hidden="true">Send the response</figcaption>
+</figure>
+<ol start="3" type="1">
+<li>Now look at the Console in your browser: all the
+<code>req.headers</code> are on display.</li>
+<li>Select the Network tab and inspect the Headers for the last request
+in the list.</li>
+</ol>
+<p>(Screenshot from Firefox)</p>
+<figure>
+<img src="images/response.png"
+alt="Response headers at the Network tab" />
+<figcaption aria-hidden="true">Response headers at the Network
+tab</figcaption>
+</figure>
+<p>The <code>"Access-Control-Allow-Origin"</code> response header has
+been set, and its value is <code>"http://localhost:3000"</code>. (Note
+that somewhere on the way, all the words in the header key have been
+given an initial capital letter again.) This is the origin of the site
+from which you made the request for data from
+<code>"http://127.0.0.1:3000"</code>, so all is good.</p>
+<p>Or is it?</p>
+</section>
+<!-- What CORS Does Not Do -->
+<section id="what-cors-does-not-do" aria-labelledby="what-cors-does-not-do" data-item="What CORS Doesn&#39;t Do">
+<h2>
+<a href="#what-cors-does-not-do">What CORS Does Not Do</a>
+</h2>
+<p>You might be tempted to think that your server
+<strong><em>only</em></strong> sends the requested resource back to the
+browser if <code>"Access-Control-Allow-Origin"</code> response header
+has been correctly set. You might think that if CORS does not set the
+<code>"Access-Control-Allow-Origin"</code> header, or sets it to a value
+that is incompatible with <code>res.headers.origin</code>, then it will
+<strong><em>not</em></strong> send the requested resource.</p>
+<p>But that’s not what <code>cors</code> does. The <code>cors</code>
+module does one job, and it does it well. It sets (or does not set) the
+<code>"Access-Control-Allow-Origin"</code> response header. That’s
+all.</p>
+<p>The code in your <code>app.js</code> script explicitly says…</p>
+<pre class="language-javascript"><code class="language-javascript">res.send(message)</code></pre>
+<p><small style="color:orange">Listing 21</small></p>
+<p>… and so that’s what your server does. Even when <code>cors</code>
+has indicated that <code>res.headers.origin</code> is not allowed.</p>
+<p>The browser receives the resource, whether it is allowed to use it or
+not, and it is the <em>browser</em> that checks if the value of
+<code>"Access-Control-Allow-Origin"</code> response header gives it
+permission to use the resource.</p>
+<h3
+id="confirming-the-browser-receives-impermissible-resources">Confirming
+the browser receives impermissible resources</h3>
+<ol type="1">
+<li>Edit your <code>corsOptions</code> object, so that it generates a
+value of <code>false</code> for the <code>origin</code> property:</li>
+</ol>
+<pre class="language-javascript line-numbers" data-start="8"><code class="language-javascript line-numbers"><i>const corsOptions = {
+  origin: (origin, callback) =&gt; {
+    console.log("origin:", origin);
+    callback(null, </i><b>false</b><i>)
+  }
+}</i></code></pre>
+<p><small style="color:orange">Listing 22</small></p>
+<ol start="2" type="1">
+<li>Stop the debugger, by clicking on the Stop button in the debugger
+Control panel.</li>
+</ol>
+<figure>
+<img src="images/originFalse.png" alt="Stop the debugger" />
+<figcaption aria-hidden="true">Stop the debugger</figcaption>
+</figure>
+<ol start="3" type="1">
+<li>Start your server normally, from the Terminal</li>
+</ol>
+<figure>
+<img src="images/restartServer.png"
+alt="Start the server from the Terminal" />
+<figcaption aria-hidden="true">Start the server from the
+Terminal</figcaption>
+</figure>
+<ol start="4" type="1">
+<li>From your browser Console, run the same command that you ran before
+to fetch data from <code>127.0.0.1</code> (see Listing 8).</li>
+</ol>
+<p>The console should give you the same Error that you saw in Listing 9
+(or something like it, depending on which browser you are using.) The
+Cross-Origin Request is blocked because the
+<code>‘Access-Control-Allow-Origin’</code> response header is
+missing.</p>
+<ol start="5" type="1">
+<li>Now open the Network tab and look at the Response Headers for this
+last request. The value for Content-Length is <em>not zero</em>. Most
+probably it is exactly the same as for the last successful request (see
+Figure 12).</li>
+</ol>
+<figure>
+<img src="images/contentLength.png" alt="Content-Length is not zero" />
+<figcaption aria-hidden="true">Content-Length is not zero</figcaption>
+</figure>
+<p>The <code>message</code> from your server <em>was</em> delivered,
+even if the browser nobly refused to show it.</p>
+<details class="tip" open>
+<summary>
+Wireshark
+</summary>
+<p>If you are not convinced, you could use a tool like <a
+href="https://www.wireshark.org/">WireShark</a>, which is free and
+open-source, to read the packets returned by the server, and sure
+enough: the incoming message contains the <code>message</code> that your
+<code>app.js</code> script asked the server to send.</p>
+<figure>
+<img src="images/wireShark.png"
+alt="WireShark shows the incoming message" />
+<figcaption aria-hidden="true">WireShark shows the incoming
+message</figcaption>
+</figure>
+</details>
+<p>In other words, with its default settings, your Express server can
+waste both its CPU time and the bandwidth you pay for to send data
+across the Internet that only bad actors with rogue browser-like apps
+will be able to use.</p>
+</section>
+<!-- Ignoring Intruders -->
+<section id="ignoring-intruders" aria-labelledby="ignoring-intruders" data-item="Ignoring Intruders">
+<h2>
+<a href="#ignoring-intruders">Ignoring Intruders</a>
+</h2>
+<details class="tip" open>
+<summary>
+Summary
+</summary>
+<p>If you cloned the <a
+href="https://github.com/MERNCraft/CORS-backend">GitHub repository</a>,
+you can use <code>git checkout invitation-only</code> to apply the
+changes that are described below.</p>
+</details>
+<p>The solution is to check if the headers for the <code>res</code>
+object have been set to an acceptable value. The browser will give your
+client-side code access to the response from the server if
+<code>res.get("access-control-allow-origin")</code> is set to either
+<code>"*"</code> or to the value of <code>req.headers.origin</code>.</p>
+<p>To check this:</p>
+<ol type="1">
+<li>Add the following route to your <code>app.js</code> script:</li>
+</ol>
+<pre class="language-javascript line-numbers" data-start="32"><code class="language-javascript line-numbers"><i>app.get('/headers', (req, res) =&gt; {
+  const message = `&lt;pre&gt;
+${JSON.stringify(req.headers, null, "  ")}
+&lt;/pre&gt;`
+
+  res.send(message)
+})
+
+
+</i><b>app.get('/invitation-only', (req, res) =&gt; {
+  const origin = req.get("origin")
+  console.log("origin:", origin);
+  // `req.headers.origin`, sent from the browser, will
+  // be either undefined or a string
+
+  const allowed = res.get("access-control-allow-origin")
+  // After treatment by `cors, the response header for
+  // "access-control-allow-origin" will be one of:
+  // - undefined
+  // - "*"
+  // - the same string as origin
+  console.log("allowed:", allowed);
+
+  // If a direct request is made from the browser's
+  // address bar, ``req.headers.origin`` will be undefined,
+  // so cors will not set the "access-control-allow-origin"
+  // header. This means that `allowed` will also be
+  // undefined, and therefore === `origin`, even though it
+  // is not a string.
+  const ok = (allowed === origin || allowed === "*")
+  console.log("ok", ok)
+  
+  // Only use server CPU time and bandwidth if the request
+  // came from a whitelisted origin. If not, send an empty
+  // message.
+  const message = ok
+    ? "TODO: DATABASE STUFF TO GENERATE A REAL MESSAGE"
+    : ""
+
+  res.send(message)
+})</b><i>
+
+
+app.listen(PORT, optionalCallbackForListen) </i></code></pre>
+<p><small style="color:orange">Listing 23</small></p>
+<p>The last change you made to <code>corsOptions</code> (Listing 22)
+meant that the <code>"access-control-allow-origin"</code> response
+header was never set. You can change this so that only two server
+addresses are authorized:</p>
+<ol start="2" type="1">
+<li>Replace the current value for <code>corsOptions</code>…</li>
+</ol>
+<pre class="language-javascript line-numbers" data-start="9"><code class="language-javascript line-numbers">const corsOptions = {
+<i>  origin: (origin, callback) =&gt; {
+    console.log("origin:", origin);
+    callback(null, false)
+  }
+}</i></code></pre>
+<p>… with this:</p>
+<pre class="language-javascript line-numbers" data-start="9"><code class="language-javascript line-numbers"><b>const corsOptions = {
+  origin: [
+    /^HTTP:\/\/LOCALHOST:/i,
+    "http://127.0.0.1:3000"
+  ]
+}</b></code></pre>
+<p><small style="color:orange">Listing 24</small></p>
+<details class="note" open>
+<summary>
+lowercase
+</summary>
+<p>The first entry in the <code>origin</code> array is a Regular
+Expression. It will be used to check whether
+<code>res.headers.origin</code> starts with
+<code>HTTP://LOCALHOST:</code>, followed by a port number. The final
+<code>i</code> indicates that the match is
+case-<b><i>i</i></b>nsensitive, so it will also match
+<code>http://localhost:</code>.</p>
+<p>The browser will always send <code>res.headers.origin</code> in
+lowercase. I wrote the Regular Expression in uppercase just to remind
+you that <code>cors</code> matches <em>string</em> values (like
+<code>"http://127.0.0.1:3000"</code>) with case-<b><i>sensitive</i></b>
+matching, but Regular Expression matches can be
+case-<b><i>insensitive</i></b>.</p>
+</details>
+<p>Because you used <code>npm start</code> to tell <code>nodemon</code>
+to run your server, the server will be automatically relaunched after
+you save your changes.</p>
+<ol start="3" type="1">
+<li>In the browser Console, paste the code below (note the new URL for
+the <code>fetch</code> command) and press Enter:</li>
+</ol>
+<pre class="javascript-ways line-numbers"><code class="javascript-ways line-numbers">options = {"method": 'GET', "Content-Type": 'application/json'};
+fetch('http://127.0.0.1:3000/invitation-only', options)
+.then(res =&gt; res.text())
+.then(text =&gt; console.log(text))
+.catch(error =&gt; console.log("Error", error))</code></pre>
+<p><small style="color:orange">Listing 25</small></p>
+<p>This is a cross-origin request to the route that you have just
+created. The origin <code>'http://127.0.0.1:3000'</code> matches one of
+the values in the <code>origin</code> array in <code>corsOptions</code>
+so you should see the phrase “TODO: DATABASE STUFF TO GENERATE A REAL
+MESSAGE” logged in the Console.</p>
+<p>And if you inspect the most recent request in the Headers tab of the
+Network pane, you’ll see that the <code>Content-Length</code> for the
+response message is 47 characters:</p>
+<figure>
+<img src="images/resolve.png" alt="Response for an authorized site" />
+<figcaption aria-hidden="true">Response for an authorized
+site</figcaption>
+</figure>
+<h3 id="no-content-for-an-unauthorized-site">No content for an
+unauthorized site</h3>
+<p>When you restarted your server, you should have seen something like
+this logged into your Terminal pane:</p>
+<pre class="language-bash"><code class="language-bash">Express server listening at:
+  http://localhost:3000
+  http://127.0.0.1:3000
+  http://192.168.0.11:3000</code></pre>
+<p><small style="color:orange">Listing 26</small></p>
+<p>Your <code>corsOptions</code> object explicitly authorizes sites at
+the loopback addresses <code>http://localhost:&lt;anyport&gt;</code> and
+<code>http://127.0.0.1:3000</code> to connect. If there are other links
+(like “http://192.168.0.11:3000” above), these represent origins that
+are not whitelisted by <code>corsOptions</code>.</p>
+<ol start="4" type="1">
+<li>In the address bar of your browser, connect to
+<code>http://192.168.0.11:3000/invitation-only</code> (using your own
+non-loopback address instead of “192.168.0.11”).</li>
+</ol>
+<p>You should see
+<code>TODO: DATABASE STUFF TO GENERATE A REAL MESSAGE</code> in the
+browser window. This is because the request was made directly from the
+address bar, not from within the context of a page served by this
+site.</p>
+<ol start="5" type="1">
+<li>With the keyboard focus on the Console, press the Up arrow on your
+keyboard, so that the last command (Listing 25) is shown again.</li>
+<li>Press the Enter key.</li>
+</ol>
+<p>This time, as you might expect, the cross-origin request is rejected.
+If you inspect the most recent request in the Headers tab of the Network
+pane, you should see that the <code>Content-Length</code> of the
+response message was 0.</p>
+<figure>
+<img src="images/reject.png" alt="Response for an authorized site" />
+<figcaption aria-hidden="true">Response for an authorized
+site</figcaption>
+</figure>
+<p>In a real project, you won’t be using a message like
+<code>"TODO: DATABASE STUFF TO GENERATE A REAL MESSAGE"</code>. In a
+real project, when an authorized request is received, your server might
+actually do some CPU intensive work calling a database and waiting for
+the response.</p>
+<p>Using this technique to check whether the site that makes the request
+is authorized to receive a response, you can save CPU cycles and
+bandwidth, and prevent bad actors who sniff for packets with software
+like WireShark from gaining access to resources that they have no right
+to.</p>
+</section>
+<!-- Key Takeaways -->
+<section id="key-takeaways" aria-labelledby="key-takeaways" data-item="Key Takeaways">
+<h2>
+<a href="#Key Takeaways">So what should you take away from this
+tutorial?</a>
+</h2>
+<p>At the top level, you have seen:</p>
+<ul>
+<li>You can use <code>cors</code> Node module to add a header to the
+server’s response to a request, which will tell the browser whether it
+has the right to use that response.</li>
+<li>By default, an Express server will send the response (and run all
+the code required to generate the response) <em>even if</em> the site
+that sent the request is not authorized to use the response.</li>
+<li>In your route callback, you can check whether <code>cors</code> has
+set the <code>"access-control-allow-origin"</code> header in the
+response to a value that matches the <code>origin</code> in
+<code>req.headers</code>. If not, your route callback can simply return
+a blank message.</li>
+</ul>
+<p>At a deeper level, you have discovered:</p>
+<ul>
+<li>Testing how a bad actor might try to access your site can help you
+improve the performance of your code</li>
+<li>You can simulate calls to an API from within a site by pasting code
+into the Developer Console and executing it.</li>
+<li>Your browser provides you with an immense amount of information
+about the data it requests and receives</li>
+<li>You can step through the code of your server with the debugger.</li>
+<li>Exploring the code used by a Node module is informative and
+empowering.</li>
+<li>When you encounter a problem in a big project, you can use a “Divide
+and Conquer” approach. You can take a step back and create a bare-bones
+project that deals specifically with the problem, so that all the other
+details of your big project don’t get in the way of your
+understanding.</li>
+<li>As an example of such simplification, you can test cross-origin
+issues using a single server app on a single computer.</li>
+</ul>
+<h2 id="further-reading">Further Reading</h2>
+<p><a href="https://httptoolkit.tech/will-it-cors/">Will it CORS</a>
+asks you what you want to achieve with CORS and then gives you the code
+and describes the steps you need to achieve you goal.</p>
+</section>
+<!-- Intro -->
 <section id="intro" aria-labelledby="intro" data-item="Introduction">
 <h2>
 <a href="#intro">Introduction</a>
 </h2>
-<p>To create your own content, edit the file at
-<code>docs/md/99-Intro.md</code> and add more <code>.md</code> files in
-the <code>docs/md/</code> folder.</p>
-<p>See <a
-href="https://htm-elves.github.io/Writing-Your-Own-Tutorials/">Writing
-Your Own Tutorials</a> for tips and shortcuts.</p>
+<h1 id="an-express-server-for-finding-your-way-around-cors">An Express
+server for finding your way around CORS</h1>
+<p>This tutorial was inspired by a group of students who were building a
+frontend and a backend for their first full-stack project. They wanted
+to deploy the backend to <a href="https://render.com/pricing">a site
+that offers free hosting</a> for hobbyists, students, and indie hackers.
+And they wanted to prevent anyone else from obtaining resources from
+their backend.</p>
+<p>They knew that CORS, or <a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS">Cross-Origin
+Resource Sharing</a> is a mechanism that allows your server to whitelist
+or blacklist which sites can access the resources on your site. But CORS
+wasn’t working the way they had assumed it would work.</p>
+<p>They discovered an issue when they deliberately made a request from
+an unauthorized origin. Their CORS code was apparently refusing the
+request, which is good, but their database was being queried all the
+same. Which was not what they wanted.</p>
+<details class="note" open>
+<summary>
+Why use CORS?
+</summary>
+<p>You can use CORS to:</p>
+<ul>
+<li>Prevent third-party sites from hot-linking to your images, videos,
+fonts and other resources</li>
+<li>Decide which sites can have read data from your server’s API</li>
+</ul>
+</details>
+<h3 id="goals">Goals</h3>
+<p>In this tutorial, you will be setting up a basic Express server and
+getting it to respond nicely to requests from a source that can be
+trusted, and to refuse to allow your browser to use information obtained
+by sources which have not been whitelisted.</p>
+<p>You’ll see how you can dive into the code of the <code>cors</code>
+Node module itself, and emerge with a deep understanding of what the
+<code>cors</code> module does… and what it does not do.</p>
+<p>And finally, you’ll see how to block sites from getting any
+information from your server, unless they have been whitelisted.</p>
+<details class="note" open>
+<summary>
+Who this tutorial is for
+</summary>
+<p>Before you start this tutorial:</p>
+<ul>
+<li>You should be comfortable with JavaScript in general and the <a
+href="https://expressjs.com/">Express Node module</a> in
+particular.</li>
+<li>You should know <a
+href="https://balsamiq.com/support/faqs/browserconsole/">how to access
+the Developer Tools</a> in your favourite browser.</li>
+<li>You should also understand a few basic <code>bash</code> commands
+including those used with <code>npm</code>.</li>
+<li>It helps if you know how to use <a
+href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promises</a>
+and the <a
+href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch">fetch
+API</a>, but you can skip over this code without losing the thread.</li>
+</ul>
+<p>I’ll occasionally use some more advanced code, simply to make your
+life easier. This should “just work” even if you don’t fully understand
+it.</p>
+</details>
+<h3 id="source-code">Source code</h3>
+<p>The <a href="https://github.com/MERNCraft/CORS-backend">GitHub
+repository</a> for this tutorial has two branches: <code>main</code> and
+<code>invitation-only</code>. If you clone the repository, you will need
+to run <code>npm install</code> before you can use
+<code>npm start</code> to run the server.</p>
+<p>The second branch contains an updated version of <code>main</code>
+that is used in the second part of the tutorial.</p>
+<details class="env" open>
+<summary>
+Working with VS Code
+</summary>
+<p>There is a section on using a debugger to step through the source
+code of the <code>cors</code> Node Module. I’ll be using <a
+href="https://code.visualstudio.com/download">Visual Studio Code</a> as
+my code editor, so the steps and the screenshots that provide will refer
+to the <a href="https://code.visualstudio.com/docs/editor/debugging">VS
+Code debugger</a>.</p>
+<p>If you use a different development environment, I encourage you to
+follow using the debugger that you are used to. However, you don’t
+<em>need</em> to use a debugger at all to follow the explanations about
+how <code>cors</code> works; you can simply work through my explanations
+of the code.</p>
+</details>
 </section>
 
 <div class="spacer"></div>
